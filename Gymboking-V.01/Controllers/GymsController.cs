@@ -7,16 +7,19 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Gymboking_V._01.Data;
 using Gymboking_V._01.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace Gymboking_V._01.Controllers
 {
     public class GymsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> userManager;
 
-        public GymsController(ApplicationDbContext context)
+        public GymsController(ApplicationDbContext context,UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            this.userManager = userManager;
         }
 
         // GET: Gyms
@@ -33,16 +36,33 @@ namespace Gymboking_V._01.Controllers
             if (id == null) return NotFound();
             
            var ApplicationUser_Id =  _context.Users.FirstOrDefault(u => u.UserName == User.Identity.Name);
-            var userid = userManager.
+            var userid = userManager.GetUserId(User);
 
-            var gym_id = await _context.Gym.FindAsync(id);
+            var currentgym = await _context.Gym
+                .Include(a => a.AttendingMembers)
+                .FirstOrDefaultAsync(g =>g.Id==id);
 
-    
 
-            //_context.Add();
+            var attending = currentgym.AttendingMembers.FirstOrDefault(u => u.ApplicationUserId == userid);
+
+            if(attending == null)
+            {
+                var book = new ApplicationUserGymClass
+                {
+                    ApplicationUserId = userid,
+                    GymId = currentgym.Id
+                };
+            _context.Add(book);
             await _context.SaveChangesAsync();
+            }
 
-            return View();
+            else
+            {
+                _context.ApplicationUserGymClass.Remove(attending);
+                _context.SaveChanges();
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
 
