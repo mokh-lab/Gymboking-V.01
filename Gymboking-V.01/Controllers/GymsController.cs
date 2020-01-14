@@ -8,9 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using Gymboking_V._01.Data;
 using Gymboking_V._01.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Gymboking_V._01.Controllers
 {
+    [Authorize]
     public class GymsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -23,39 +25,55 @@ namespace Gymboking_V._01.Controllers
         }
 
         // GET: Gyms
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Gym.ToListAsync());
+            //if(User.Identity.IsAuthenticated )
+            //{
+            //    return View(await _context.Gym)
+            //}
+
+            var model = await _context.Gym
+              .Include(g => g.AttendingMembers)
+              .ThenInclude(a => a.ApplicationUser)
+              .ToListAsync();
+
+            return View(model);
         }
         //-------------------------------------------------------------------------------
 
 
-        public async Task<IActionResult> BokingToggel(int? id)
+        public async Task<IActionResult> BookingToogle(int? id)
         {
-
             if (id == null) return NotFound();
-            
-           var ApplicationUser_Id =  _context.Users.FirstOrDefault(u => u.UserName == User.Identity.Name);
-            var userid = userManager.GetUserId(User);
 
-            var currentgym = await _context.Gym
+            //Hämta den inloggade användarens id
+            // var userId = _context.Users.FirstOrDefault(u => u.UserName == User.Identity.Name);
+            var userId = userManager.GetUserId(User);
+
+            //Hämta aktuellt gympass
+            var currentGymClass = await _context.Gym
                 .Include(a => a.AttendingMembers)
-                .FirstOrDefaultAsync(g =>g.Id==id);
+                .FirstOrDefaultAsync(g => g.Id == id);
 
+            //Är den aktuella inloggade användaren bokad på passet?
+            var attending = currentGymClass.AttendingMembers
+                .FirstOrDefault(u => u.ApplicationUserId == userId);
 
-            var attending = currentgym.AttendingMembers.FirstOrDefault(u => u.ApplicationUserId == userid);
-
-            if(attending == null)
+            //Om inte, boka användaren på passet
+            if (attending == null)
             {
                 var book = new ApplicationUserGymClass
                 {
-                    ApplicationUserId = userid,
-                    GymId = currentgym.Id
+                    ApplicationUserId = userId,
+                    GymId = currentGymClass.Id
                 };
-            _context.Add(book);
-            await _context.SaveChangesAsync();
+
+                _context.ApplicationUserGymClass.Add(book);
+                _context.SaveChanges();
             }
 
+            //Annars avboka
             else
             {
                 _context.ApplicationUserGymClass.Remove(attending);
@@ -63,8 +81,8 @@ namespace Gymboking_V._01.Controllers
             }
 
             return RedirectToAction(nameof(Index));
-        }
 
+        }
 
 
 
@@ -77,15 +95,17 @@ namespace Gymboking_V._01.Controllers
                 return NotFound();
             }
 
-            var gym = await _context.Gym
+            var gymClass = await _context.Gym
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (gym == null)
+            if (gymClass == null)
             {
                 return NotFound();
             }
 
-            return View(gym);
+            return View(gymClass);
         }
+
+         
 
         // GET: Gyms/Create
         public IActionResult Create()

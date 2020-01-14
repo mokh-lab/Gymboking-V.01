@@ -8,7 +8,10 @@ namespace Gymboking_V._01.Models
 {
     public class ApplicationUser : IdentityUser
     {
-
-        public virtual ICollection<ApplicationUserGymClass> AttendingClasses { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string FullName { get { return FirstName + "" + LastName; } }
+        public DateTime TimeOfRegistration { get; set; }
+        public  ICollection<ApplicationUserGymClass> AttendingClasses { get; set; }
     }
 }
