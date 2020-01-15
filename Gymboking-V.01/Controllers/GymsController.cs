@@ -36,13 +36,14 @@ namespace Gymboking_V._01.Controllers
             var model = await _context.Gym
               .Include(g => g.AttendingMembers)
               .ThenInclude(a => a.ApplicationUser)
+              .IgnoreQueryFilters()
               .ToListAsync();
 
             return View(model);
         }
         //-------------------------------------------------------------------------------
 
-
+            [Authorize(Roles ="Member")]
         public async Task<IActionResult> BookingToogle(int? id)
         {
             if (id == null) return NotFound();
@@ -88,6 +89,7 @@ namespace Gymboking_V._01.Controllers
 
         //--------------------------------------------------------------------------------
         // GET: Gyms/Details/5
+        
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -105,9 +107,10 @@ namespace Gymboking_V._01.Controllers
             return View(gymClass);
         }
 
-         
+
 
         // GET: Gyms/Create
+        [Authorize (Roles="Admin")]
         public IActionResult Create()
         {
             return View();
@@ -118,6 +121,7 @@ namespace Gymboking_V._01.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("Id,Name,StartTime,Duration,Description")] Gym gym)
         {
             if (ModelState.IsValid)

@@ -23,6 +23,7 @@ namespace Gymboking_V._01.Areas.Identity.Pages.Account.Manage
             _signInManager = signInManager;
         }
 
+        public string FullName { get; set; }
         public string Username { get; set; }
 
         [TempData]
@@ -44,6 +45,7 @@ namespace Gymboking_V._01.Areas.Identity.Pages.Account.Manage
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
 
             Username = userName;
+            FullName =user.FullName;
 
             Input = new InputModel
             {

@@ -15,6 +15,7 @@ namespace Gymboking_V._01.Data
         {
 
         }
+        public DbSet<Gymboking_V._01.Models.ApplicationUserGymClass> ApplicationUserGymClass { get; set; }
 
         public DbSet<Gym> Gym { get; set; }
         public DbSet<ApplicationUser> ApplicationUser { get; set; }
@@ -24,8 +25,12 @@ namespace Gymboking_V._01.Data
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<ApplicationUserGymClass>()
             .HasKey(t => new { t.ApplicationUserId, t.GymId });
+
+            //Global Filter
+            modelBuilder.Entity<Gym>().HasQueryFilter(g => g.StartTime > DateTime.Now);
         }
 
-        public DbSet<Gymboking_V._01.Models.ApplicationUserGymClass> ApplicationUserGymClass { get; set; }
+
+        
     }
 }

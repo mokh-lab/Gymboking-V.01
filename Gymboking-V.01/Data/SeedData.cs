@@ -42,7 +42,7 @@ namespace Gymboking_V._01.Data
                 {
                     var foundUser = await userManager.FindByEmailAsync(email);
                     if (foundUser != null) continue;
-                    var user = new ApplicationUser {UserName=email,Email=email };
+                    var user = new ApplicationUser {UserName=email,Email=email,FirstName ="Admin",LastName="Gym", TimeOfRegistration =DateTime.UtcNow };
                   var addUserResult=  await userManager.CreateAsync(user, adminPW);
                     if (!addUserResult.Succeeded)
                     {
