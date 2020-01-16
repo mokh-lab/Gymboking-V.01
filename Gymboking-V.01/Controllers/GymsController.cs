@@ -41,7 +41,7 @@ namespace Gymboking_V._01.Controllers
 
             return View(model);
         }
-        //-------------------------------------------------------------------------------
+          //-------------------------------------------------------------------------------
 
             [Authorize(Roles ="Member")]
         public async Task<IActionResult> BookingToogle(int? id)
@@ -54,6 +54,7 @@ namespace Gymboking_V._01.Controllers
 
             //Hämta aktuellt gympass
             var currentGymClass = await _context.Gym
+                .IgnoreQueryFilters()
                 .Include(a => a.AttendingMembers)
                 .FirstOrDefaultAsync(g => g.Id == id);
 
@@ -87,9 +88,47 @@ namespace Gymboking_V._01.Controllers
 
 
 
-        //--------------------------------------------------------------------------------
+        //==================================GYM-HISTORY=========================================
+        [Authorize(Roles = "Member")]
+        public async Task<IActionResult> GymHistory()
+        {
+            //var h = 
+            //TimeSpan historyperiod = new TimeSpan (20,0,0,0);
+            var model = await _context.Gym 
+              .Include(g => g.AttendingMembers)
+              .ThenInclude(a => a.ApplicationUser)
+              .IgnoreQueryFilters()
+             .Where(d => d.StartTime < DateTime.UtcNow.AddDays(-20) )
+              .ToListAsync();
+     
+
+            return View(nameof(GymHistory),model);
+        }
+
+
+        /*============================================================================*/
+
+
+        /*================================GET-BOKNING============================================*/
+        [Authorize(Roles = "Member")]
+        public async Task<IActionResult> GetBokning()
+        {
+            var userId = userManager.GetUserId(User);
+            var model=await _context.ApplicationUserGymClass
+                .Where(a => a.ApplicationUserId == userId)
+                .IgnoreQueryFilters()
+                .Select(a=> a.Gym)
+                .ToListAsync();
+
+
+            return View(model);
+        }
+
+            /*============================================================================*/
+
+
         // GET: Gyms/Details/5
-        
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
